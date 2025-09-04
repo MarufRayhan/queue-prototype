@@ -221,7 +221,10 @@ export default function PerformanceComparison() {
             <div className="flex gap-2 items-center">
               <span className="font-semibold">Queue Size:</span>
               <button
-                onClick={() => setCustomers(generateCustomers(100))}
+                onClick={() => {
+                  setCustomerCount(100);
+                  setCustomers(generateCustomers(100));
+                }}
                 className={`px-4 py-2 rounded ${
                   customerCount === 100
                     ? "bg-blue-600 text-white"

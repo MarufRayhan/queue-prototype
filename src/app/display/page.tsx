@@ -54,7 +54,7 @@ export default function DisplayBoard() {
     });
 
     socket.on("queue-joined", (data) => {
-      fetchStatus(); // Refresh to get updated queue
+      fetchStatus();
     });
   };
 
@@ -133,7 +133,7 @@ export default function DisplayBoard() {
       {/* Company Branding */}
       <div className="absolute bottom-8 right-8 text-right">
         <p className="text-xl opacity-80">Nordic Queue System</p>
-        <p className="text-sm opacity-60">Powered by EWQ</p>
+        <p className="text-sm opacity-60">Powered by Prototype of Maruf</p>
       </div>
     </div>
   );
