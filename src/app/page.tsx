@@ -5,6 +5,7 @@ import io, { type Socket } from "socket.io-client";
 import { useLanguage } from "../../LanguageContext";
 import Link from "next/link";
 import { Clock, Users, Hash, TrendingUp } from "lucide-react";
+import type { Language } from "../../LanguageContext";
 
 let socket: Socket;
 
@@ -133,19 +134,36 @@ export default function CustomerQueue() {
 
             {/* Language Selector */}
             <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-1">
-              {(["en", "fi", "sv"] as Language[]).map((lang) => (
-                <button
-                  key={lang}
-                  onClick={() => setLanguage(lang)}
-                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-                    language === lang
-                      ? "bg-white text-blue-600 shadow-sm"
-                      : "text-slate-600 hover:text-slate-800"
-                  }`}
-                >
-                  {lang.toUpperCase()}
-                </button>
-              ))}
+              <button
+                onClick={() => setLanguage("en")}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                  language === "en"
+                    ? "bg-white text-blue-600 shadow-sm"
+                    : "text-slate-600 hover:text-slate-800"
+                }`}
+              >
+                EN
+              </button>
+              <button
+                onClick={() => setLanguage("fi")}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                  language === "fi"
+                    ? "bg-white text-blue-600 shadow-sm"
+                    : "text-slate-600 hover:text-slate-800"
+                }`}
+              >
+                FI
+              </button>
+              <button
+                onClick={() => setLanguage("sv")}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                  language === "sv"
+                    ? "bg-white text-blue-600 shadow-sm"
+                    : "text-slate-600 hover:text-slate-800"
+                }`}
+              >
+                SV
+              </button>
             </div>
           </div>
         </div>
