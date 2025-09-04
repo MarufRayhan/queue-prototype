@@ -1,103 +1,211 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useState, useEffect, useMemo } from "react";
+import io, { Socket } from "socket.io-client";
+import { useLanguage } from "../../LanguageContext";
+import Link from "next/link";
+
+let socket: Socket;
+
+export default function CustomerQueue() {
+  const { t, language, setLanguage } = useLanguage();
+
+  const [queueNumber, setQueueNumber] = useState<number | null>(null);
+  const [position, setPosition] = useState(0);
+  const [estimatedWait, setEstimatedWait] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [stats, setStats] = useState({
+    currentServing: 0,
+    queueLength: 0,
+  });
+
+  // Performance tracking
+  const [renderCount, setRenderCount] = useState(0);
+  const [renderTime, setRenderTime] = useState(0);
+
+  useEffect(() => {
+    const start = performance.now();
+    socketInitializer();
+    setRenderTime(performance.now() - start);
+    setRenderCount((prev) => prev + 1);
+
+    return () => {
+      if (socket) socket.disconnect();
+    };
+  }, []);
+
+  const socketInitializer = async () => {
+    // Connect to the same domain (frontend + backend served together)
+    socket = io("/");
+
+    socket.on("connect", () => {
+      console.log("Connected to server");
+    });
+
+    socket.on("initial-stats", (data) => {
+      setStats(data);
+    });
+
+    socket.on("customer-called", (data) => {
+      setStats((prevStats) => ({
+        ...prevStats,
+        currentServing: data.number,
+      }));
+
+      if (queueNumber && data.number < queueNumber) {
+        setPosition((prev) => Math.max(0, prev - 1));
+      }
+    });
+
+    socket.on("queue-joined", (data) => {
+      setStats((prevStats) => ({
+        ...prevStats,
+        queueLength: data.queueLength,
+      }));
+    });
+  };
+
+  // Optimize wait time calculation
+  const waitTimeDisplay = useMemo(() => {
+    const minutes = position * 3.5;
+    return minutes.toFixed(1);
+  }, [position]);
+
+  const takeNumber = async () => {
+    setLoading(true);
+    const startTime = performance.now();
+
+    try {
+      // Use relative URL for backend API
+      const response = await fetch("/api/queue/join", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setQueueNumber(data.number);
+        setPosition(data.position);
+        setEstimatedWait(data.estimatedWait);
+        console.log(`Response time: ${data.responseTime}ms`);
+      }
+    } catch (error) {
+      console.error("Error joining queue:", error);
+    } finally {
+      setLoading(false);
+      setRenderTime(performance.now() - startTime);
+    }
+  };
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      {/* Language Selector */}
+      <div className="absolute top-4 right-4 flex gap-2">
+        <button
+          onClick={() => setLanguage("en")}
+          className={`px-3 py-1 rounded ${
+            language === "en" ? "bg-blue-600 text-white" : "bg-gray-200"
+          }`}
+        >
+          EN
+        </button>
+        <button
+          onClick={() => setLanguage("fi")}
+          className={`px-3 py-1 rounded ${
+            language === "fi" ? "bg-blue-600 text-white" : "bg-gray-200"
+          }`}
+        >
+          FI
+        </button>
+        <button
+          onClick={() => setLanguage("sv")}
+          className={`px-3 py-1 rounded ${
+            language === "sv" ? "bg-blue-600 text-white" : "bg-gray-200"
+          }`}
+        >
+          SV
+        </button>
+      </div>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+      {/* Navigation Links */}
+      <div className="absolute top-4 left-4 flex gap-4">
+        <Link href="/staff" className="text-blue-600 hover:underline">
+          {t.staffDashboard}
+        </Link>
+        <Link href="/display" className="text-blue-600 hover:underline">
+          {t.display}
+        </Link>
+        <Link href="/performance" className="text-blue-600 hover:underline">
+          {t.performance}
+        </Link>
+      </div>
+
+      <div className="container mx-auto px-4 py-16">
+        <h1 className="text-5xl font-bold text-center mb-12 text-gray-800">
+          🏪 {t.title}
+        </h1>
+
+        {/* Current Status */}
+        <div className="max-w-md mx-auto mb-8">
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <div className="grid grid-cols-2 gap-4 text-center">
+              <div>
+                <p className="text-gray-600 text-sm">{t.nowServing}</p>
+                <p className="text-3xl font-bold text-green-600">
+                  {stats.currentServing || "-"}
+                </p>
+              </div>
+              <div>
+                <p className="text-gray-600 text-sm">{t.currentQueue}</p>
+                <p className="text-3xl font-bold text-blue-600">
+                  {stats.queueLength}
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+        {/* Main Action Area */}
+        <div className="max-w-md mx-auto">
+          {!queueNumber ? (
+            <button
+              onClick={takeNumber}
+              disabled={loading}
+              className="w-full py-8 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-3xl font-bold rounded-2xl hover:from-blue-700 hover:to-purple-700 transition-all transform hover:scale-105 shadow-xl disabled:opacity-50"
+            >
+              {loading ? t.loading : t.takeNumber}
+            </button>
+          ) : (
+            <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
+              <p className="text-gray-600 mb-2">{t.yourNumber}</p>
+              <p className="text-7xl font-bold text-blue-600 mb-6">
+                {queueNumber}
+              </p>
+
+              <div className="grid grid-cols-2 gap-4 mt-6">
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <p className="text-gray-600 text-sm">{t.position}</p>
+                  <p className="text-2xl font-bold">{position}</p>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <p className="text-gray-600 text-sm">{t.estimatedWait}</p>
+                  <p className="text-2xl font-bold">
+                    {waitTimeDisplay} {t.minutes}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Performance Metrics */}
+        <div className="fixed bottom-4 left-4 bg-black bg-opacity-75 text-white text-xs p-2 rounded">
+          <div>Render Count: {renderCount}</div>
+          <div>Render Time: {renderTime.toFixed(2)}ms</div>
+          <div>Using useMemo: ✅</div>
+        </div>
+      </div>
     </div>
   );
 }
