@@ -132,7 +132,6 @@ export default function CustomerQueue() {
               </div>
             </nav>
 
-            {/* Language Selector */}
             <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-1">
               <button
                 onClick={() => setLanguage("en")}
