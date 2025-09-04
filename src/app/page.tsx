@@ -133,7 +133,7 @@ export default function CustomerQueue() {
 
             {/* Language Selector */}
             <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-1">
-              {["en", "fi", "sv"].map((lang) => (
+              {(["en", "fi", "sv"] as Language[]).map((lang) => (
                 <button
                   key={lang}
                   onClick={() => setLanguage(lang)}
