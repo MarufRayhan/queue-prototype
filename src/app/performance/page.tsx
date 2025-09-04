@@ -194,7 +194,8 @@ export default function PerformanceComparison() {
           📊 React Performance: useMemo Demo
         </h1>
         <p className="text-center text-gray-600 mb-8">
-          See how useMemo optimizes queue calculations for EWQ's system
+          See how useMemo optimizes queue calculations for for any Queue
+          management system
         </p>
 
         {/* Explanation Box */}
