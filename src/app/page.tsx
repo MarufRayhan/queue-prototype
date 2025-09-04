@@ -108,7 +108,7 @@ export default function CustomerQueue() {
                 <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                   <Hash className="w-4 h-4 text-white" />
                 </div>
-                <span className="text-lg">Queue System</span>
+                <span className="text-lg">Queue Systemmm</span>
               </div>
               <div className="hidden md:flex items-center gap-4">
                 <Link
