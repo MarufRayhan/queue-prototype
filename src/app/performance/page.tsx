@@ -27,7 +27,7 @@ export default function PerformanceComparison() {
   const SlowComponent = () => {
     const renderStart = useRef(performance.now());
 
-    // ❌ BAD: This recalculates EVERY time component renders
+    //  BAD: This recalculates EVERY time component renders
     const processedData = customers.map((customer) => {
       // Simulate heavy calculation
       let sum = 0;
