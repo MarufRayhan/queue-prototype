@@ -5,7 +5,6 @@ import io, { type Socket } from "socket.io-client";
 import { useLanguage } from "../../LanguageContext";
 import Link from "next/link";
 import { Clock, Users, Hash, TrendingUp } from "lucide-react";
-import type { Language } from "../../LanguageContext";
 
 let socket: Socket;
 
