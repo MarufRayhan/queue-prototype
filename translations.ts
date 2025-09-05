@@ -2,7 +2,7 @@ export type Language = "en" | "fi" | "sv";
 
 export const translations = {
   en: {
-    title: "Nordic Queue Systeeem",
+    title: "Nordic Queue System",
     takeNumber: "Take a Number",
     yourNumber: "Your Number",
     position: "Position in Queue",
